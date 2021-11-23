@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get ruts</title>
+  <link rel="stylesheet" href="https://bootswatch.com/5/minty/bootstrap.min.css">
+</head>
+
+<body style="height: 100vh;" , class="d-flex justify-content-center flex-column  ">
+  <div class="container">
+    <h1 class="text-center mb-3 mt-2">Instrucciones</h1>
+    <div class="row align-items-center">
+      <div class="col">
+
+        <div class="card bg-light mb-3 text-center" style="max-width: 20rem;">
+          <div class="card-header ">Paso 1</div>
+          <div class="card-body">
+            <h4 class="card-title">Selecciona el archivo</h4>
+            <p class="card-text">
+              Primero debes seleccionar un archivo csv con la lista de nombres.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+
+        <div class="card bg-light mb-3 text-center" style="max-width: 20rem;">
+          <div class="card-header ">Paso 2</div>
+          <div class="card-body">
+            <h4 class="card-title">Seleccione la carpeta de destino</h4>
+            <p class="card-text">
+              Aquí se encontrará el archivo final .csv con los ruts obtenidos.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+
+        <div class="card bg-light mb-3 text-center" style="max-width: 20rem;">
+          <div class="card-header ">Paso 3</div>
+          <div class="card-body">
+            <h4 class="card-title">Dale al botón submit</h4>
+            <p class="card-text">
+              Luego de presionar el botón submit, no cierres la aplicación
+              mientras se encuentra procesando.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <form>
+      <div class="row text-center">
+
+        <div class="col mb-3 ">
+          <label>
+            <span id="archivo-origen">...</span>
+            <br>
+            <button class="btn btn-outline-primary" id="btnOrigen">Selecciona el archivo</button>
+          </label>
+        </div>
+        <div class="col mb-3">
+          <span id="archivo-destino">...</span>
+          <br>
+          <button class="btn btn-outline-info" id="btnDestino">Selecciona el destino</button>
+        </div>
+      </div>
+      <div class="row text-center mt-2">
+        <button class="col-10 btn btn-outline-dark mx-auto" type="submit" id="submitBTN">Submit</button>
+      </div>
+    </form>
+    <div class="progress mt-5" id="progress">
+      <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;"
+        aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+        0%</div>
+    </div>
+  </div>
+  <script>
+    const { parsearHTML,
+      checkearCoincidenciaNombres, removeAccents } = require('../rutificador/utils');
+    function getRutsPersonas(nombre) {
+      return fetch("https://www.nombrerutyfirma.com/buscar", {
+        headers: {
+          accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+          "accept-language": "en-US,en;q=0.9,es;q=0.8",
+          "cache-control": "max-age=0",
+          "content-type": "application/x-www-form-urlencoded",
+          "sec-ch-ua":
+            '"Chromium";v="94", "Google Chrome";v="94", ";Not A Brand";v="99"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": '"Linux"',
+          "sec-fetch-dest": "document",
+          "sec-fetch-mode": "navigate",
+          "sec-fetch-site": "same-origin",
+          "sec-fetch-user": "?1",
+          "upgrade-insecure-requests": "1",
+          cookie:
+            "_ga=GA1.2.1518051021.1637166781; _gid=GA1.2.344381178.1637166781; _gat_gtag_UA_141302579_1=1",
+        },
+        referrer: "https://www.nombrerutyfirma.com/",
+        referrerPolicy: "strict-origin-when-cross-origin",
+        body: `term=${nombre.replaceAll(" ", "+")}`,
+        method: "POST",
+        mode: "cors",
+      });
+    }
+    function getRutsEmpresas(nombre) {
+      return fetch("https://www.boletaofactura.com/buscar", {
+        headers: {
+          accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+          "accept-language": "en-US,en;q=0.9,es;q=0.8",
+          "cache-control": "max-age=0",
+          "content-type": "application/x-www-form-urlencoded",
+          "sec-ch-ua":
+            '"Chromium";v="94", "Google Chrome";v="94", ";Not A Brand";v="99"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": '"Linux"',
+          "sec-fetch-dest": "document",
+          "sec-fetch-mode": "navigate",
+          "sec-fetch-site": "same-origin",
+          "sec-fetch-user": "?1",
+          "upgrade-insecure-requests": "1",
+          cookie:
+            "_ga=GA1.2.1237250352.1637170046; _gid=GA1.2.480162729.1637170046; _gat_gtag_UA_158675036_1=1",
+        },
+        referrer: "https://www.boletaofactura.com/",
+        referrerPolicy: "strict-origin-when-cross-origin",
+        body: `term=${nombre.replaceAll(" ", "+")}`,
+        method: "POST",
+        mode: "cors",
+      });
+    }
+    async function printNombre(nombre) {
+      let res = await getRutsPersonas(removeAccents(nombre));
+      let html = await res.text();
+      const personas = parsearHTML(html, "personas");
+      if (nombre.includes(" SPA")) {
+        personas.length = 0;
+      }
+      if (personas.length > 0) {
+        const personasQueCalzan = personas.filter((p) =>
+          checkearCoincidenciaNombres(nombre, p.nombre)
+        );
+        if (personasQueCalzan.length > 1) {
+          return `Muchas opciones, ${nombre}`;
+        } else {
+          if (personasQueCalzan.length === 0) {
+            res = await getRutsEmpresas(removeAccents(nombre));
+            html = await res.text();
+            const empresas = parsearHTML(html, "empresas");
+            const empresasQueCalzan = empresas.filter((e) =>
+              checkearCoincidenciaNombres(nombre, e.razonSocial)
+            );
+            if (empresasQueCalzan.length > 1) {
+              return `Muchas opciones, ${nombre}`;
+            } else {
+              if (empresasQueCalzan.length === 0) {
+                return `No encontrado, ${nombre}`;
+              } else {
+                const empresa = empresasQueCalzan[0];
+                return `${empresa.rut}, ${nombre}`;
+              }
+            }
+            return `No encontrado, ${nombre}`;
+          } else {
+            const persona = personasQueCalzan[0];
+            return `${persona.rut}, ${nombre}`;
+          }
+        }
+      } else {
+        res = await getRutsEmpresas(removeAccents(nombre));
+        html = await res.text();
+        const empresas = parsearHTML(html, "empresas");
+        const empresasQueCalzan = empresas.filter((e) =>
+          checkearCoincidenciaNombres(nombre, e.razonSocial)
+        );
+        if (empresasQueCalzan.length > 1) {
+          return `Muchas opciones, ${nombre}`;
+        } else {
+          if (empresasQueCalzan.length === 0) {
+            return `No encontrado, ${nombre}`;
+          } else {
+            const empresa = empresasQueCalzan[0];
+            return `${empresa.rut}, ${nombre}`;
+          }
+        }
+      }
+    };
+    const data = {
+      origen: "",
+      destino: ""
+    };
+    const fileInput = document.getElementById("btnOrigen");
+    const fileOutput = document.getElementById("btnDestino");
+    const form = document.querySelector("form");
+    const { ipcRenderer } = require('electron');
+    const fs = require("fs")
+
+    fileInput.addEventListener("click", (e) => {
+      e.preventDefault();
+      ipcRenderer.send('open-file-dialog');
+    })
+
+    fileOutput.addEventListener("click", (e) => {
+      e.preventDefault();
+      ipcRenderer.send('show-save-dialog');
+    })
+
+    ipcRenderer.on('selected-file', (event, path) => {
+      document.getElementById("archivo-origen").innerHTML = path;
+      data.origen = path;
+      console.log(path)
+    })
+
+    ipcRenderer.on("selected-output", (event, path) => {
+      document.getElementById("archivo-destino").innerHTML = path;
+      data.destino = path;
+      console.log(path)
+    })
+
+    ipcRenderer.on("process-error", () => {
+
+    })
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (data.origen === "" || data.destino === "") {
+        alert("Selecciona las rutas");
+        return;
+      }
+      const pathDestino = data.destino;
+      fs.readFile(data.origen, 'utf8', async (err, data) => {
+        if (err) throw err;
+        let lines = data.split("\n");
+        fs.writeFileSync(pathDestino, "", 'utf8');
+        fileInput.disabled = !fileInput.disabled;
+        fileOutput.disabled = !fileOutput.disabled;
+        document.querySelector("#submitBTN").disabled = !document.querySelector("#submitBTN").disabled
+
+        for (let i = 0; i < lines.length; i++) {
+          const nombre = lines[i];
+          let res = await printNombre(nombre);
+          fs.appendFileSync(pathDestino, res + "\n", (err) => {
+            if (err) throw err;
+          });
+          const progreso = ((i + 1) / lines.length) * 100
+          document.querySelector("#progress .progress-bar").innerText = `${Number.parseInt(progreso)}%`
+          document.querySelector("#progress .progress-bar").style.width = `${progreso}%`
+          document.querySelector("#progress .progress-bar").ariaValueNow = `${Number.parseInt(progreso)}`
+
+        }
+        ipcRenderer.send('process-finished');
+        fileInput.disabled = !fileInput.disabled;
+        fileOutput.disabled = !fileOutput.disabled;
+        document.querySelector("#submitBTN").disabled = !document.querySelector("#submitBTN").disabled
+      });
+    })
+
+  </script>
+</body>
+
+</html>
