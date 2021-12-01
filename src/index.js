@@ -19,6 +19,6 @@ ipcMain.on("show-save-dialog", () => utils.manageShowSaveDialog(mainWindow));
 
 ipcMain.on("process-finished", () => utils.manageProcessFinished(mainWindow));
 
-if (process.env.NODE_ENV == "production") {
-  mainWindow.setMenu(null);
-}
+// if (process.env.NODE_ENV == "production") {
+mainWindow.setMenu(null);
+// }
